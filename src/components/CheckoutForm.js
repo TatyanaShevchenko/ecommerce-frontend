@@ -11,6 +11,7 @@ export const CheckoutForm = () => {
   const [token, setToken] = useState(null)
   const [total, setTotal] = useState("loading")
   const [paymentResult, setPaymentResult] = useState(null)
+  const [success, setSuccess] = useState(false)
 
   const [shipping_name, setShipping_Name] = useState("")
   const [shipping_address, setShipping_address] = useState("")
@@ -20,11 +21,13 @@ export const CheckoutForm = () => {
 
   const handleSubmit = async event => {
     event.preventDefault()
+
     const result = await stripe.confirmCardPayment(token, {
       payment_method: {
         card: elements.getElement(CardElement),
       },
     })
+
     if (result.error) {
       console.log(result.error.message)
     } else {
@@ -38,16 +41,18 @@ export const CheckoutForm = () => {
         shipping_country,
         shipping_state,
         shipping_zip,
-        cart
+        cart,
       }
 
-      fetch('http://localhost:1337/orders', {
-        method: 'POST',
+      fetch("http://localhost:1337/orders", {
+        method: "POST",
         headers: {
-          "Content-Type":"application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       })
+
+      setSuccess(true)
     }
   }
 
@@ -69,7 +74,7 @@ export const CheckoutForm = () => {
       setToken(data.client_secret)
       setTotal(data.amount)
     }
-    loadToken()
+    loadToken();
   }, [cart])
 
   const generateInput = (label, value, setOnChange) => {
@@ -80,7 +85,7 @@ export const CheckoutForm = () => {
         </label>
         <input
           className="CheckoutForm_Input"
-          autoComplete={true}
+          autoComplete
           name={label}
           id={label}
           value={value}
@@ -108,25 +113,28 @@ export const CheckoutForm = () => {
     return (
       <div>
         <h3>Total: {formatPrice(total)}</h3>
-        <form className="CheckoutForm_Form" onSubmit={handleSubmit}>
-          <div className="CheckoutForm_Inputs">
-            {generateInput(
-              "Shipping Recipient",
-              shipping_name,
-              setShipping_Name
-            )}
-            {generateInput(
-              "Shipping Address",
-              shipping_address,
-              setShipping_address
-            )}
-            {generateInput("State", shipping_state, setShipping_State)}
-            {generateInput("Country", shipping_country, setShipping_Country)}
-            {generateInput("ZIP", shipping_zip, setShipping_Zip)}
-          </div>
-          <CardElement className="CheckoutForm_CardElement" />
-          <button disabled={!stripe || !valid()}>Buy IT!</button>
-        </form>
+        {!success && (
+          <form className="CheckoutForm_Form" onSubmit={handleSubmit}>
+            <div className="CheckoutForm_Inputs">
+              {generateInput(
+                "Shipping Recipient",
+                shipping_name,
+                setShipping_Name
+              )}
+              {generateInput(
+                "Shipping Address",
+                shipping_address,
+                setShipping_address
+              )}
+              {generateInput("State", shipping_state, setShipping_State)}
+              {generateInput("Country", shipping_country, setShipping_Country)}
+              {generateInput("ZIP", shipping_zip, setShipping_Zip)}
+            </div>
+            <CardElement className="CheckoutForm_CardElement" />
+            <button disabled={!stripe || !valid()}>Buy IT!</button>
+          </form>
+        )}
+
         {paymentResult && (
           <h2 className="CheckoutForm_Success">{paymentResult}</h2>
         )}
@@ -134,7 +142,7 @@ export const CheckoutForm = () => {
     )
   } else {
     return (
-      <div class="lds-grid">
+      <div className="lds-grid">
         <div></div>
         <div></div>
         <div></div>
